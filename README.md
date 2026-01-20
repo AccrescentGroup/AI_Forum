@@ -1,23 +1,214 @@
-# Community Forum
+# AI Forum - Community Platform
 
 A production-ready, multi-product community forum application built with Next.js 14, TypeScript, TailwindCSS, and PostgreSQL. Similar to Google AI Forum and developer forums, optimized for companies with multiple products.
 
-## Features
+## 🚀 Quick Start
+
+### Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+| Software | Version | Download Link |
+|----------|---------|---------------|
+| Node.js | 18 or higher | [nodejs.org](https://nodejs.org/) |
+| npm | 9 or higher | Comes with Node.js |
+| PostgreSQL | 14 or higher | [postgresql.org](https://www.postgresql.org/download/) |
+
+### Step-by-Step Installation
+
+#### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/AccrescentGroup/AI_Forum.git
+cd AI_Forum
+```
+
+#### Step 2: Install Dependencies
+
+```bash
+npm install
+```
+
+This will install all required packages and generate the Prisma client automatically.
+
+#### Step 3: Set Up PostgreSQL Database
+
+**Option A: Using Homebrew (macOS)**
+```bash
+# Install PostgreSQL
+brew install postgresql@16
+
+# Start PostgreSQL service
+brew services start postgresql@16
+
+# Create the database
+/opt/homebrew/opt/postgresql@16/bin/createdb community_forum
+```
+
+**Option B: Using Docker**
+```bash
+docker-compose up -d postgres
+```
+
+**Option C: Using existing PostgreSQL**
+- Create a database named `community_forum`
+
+#### Step 4: Configure Environment Variables
+
+Create a `.env` file in the root directory:
+
+```bash
+# Copy this and save as .env file
+
+# Database Connection
+DATABASE_URL="postgresql://YOUR_USERNAME@localhost:5432/community_forum?schema=public"
+
+# NextAuth Configuration
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key-min-32-characters-long"
+
+# Google OAuth (Optional - leave empty to disable)
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+NEXT_PUBLIC_GOOGLE_ENABLED="false"
+
+# Email SMTP (Optional - uses Ethereal for development if not set)
+SMTP_HOST=""
+SMTP_PORT=""
+SMTP_USER=""
+SMTP_PASSWORD=""
+EMAIL_FROM=""
+```
+
+**Generate a secure NEXTAUTH_SECRET:**
+```bash
+openssl rand -hex 32
+```
+
+#### Step 5: Initialize the Database
+
+```bash
+# Push the database schema
+npm run db:push
+
+# Seed the database with sample data
+npm run db:seed
+```
+
+#### Step 6: Start the Development Server
+
+```bash
+npm run dev
+```
+
+#### Step 7: Open the Application
+
+Open your browser and navigate to:
+```
+http://localhost:3000
+```
+
+---
+
+## 🔐 Demo Accounts
+
+After running the seed script, use these accounts to test:
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | admin@community.dev | Admin123! |
+| **Moderator** | mod@community.dev | Mod12345! |
+| **User** | alice@example.com | User1234! |
+| **User** | bob@example.com | User1234! |
+| **User** | charlie@example.com | User1234! |
+
+---
+
+## 📁 Project Structure
+
+```
+AI_Forum/
+├── prisma/
+│   ├── schema.prisma          # Database schema
+│   └── seed.ts                # Seed script
+├── src/
+│   ├── app/                   # Next.js App Router pages
+│   │   ├── (community)/       # Community pages
+│   │   │   ├── community/     # Main forum pages
+│   │   │   ├── admin/         # Admin dashboard
+│   │   │   ├── mod/           # Moderation dashboard
+│   │   │   └── u/             # User profiles
+│   │   ├── api/               # API routes
+│   │   └── auth/              # Authentication pages
+│   ├── components/            # React components
+│   │   ├── ui/                # UI primitives (Button, Card, etc.)
+│   │   ├── layout/            # Layout components
+│   │   ├── topic/             # Topic-related components
+│   │   └── mod/               # Moderation components
+│   └── lib/                   # Utilities & configuration
+│       ├── auth.ts            # NextAuth configuration
+│       ├── db.ts              # Prisma client
+│       ├── email.ts           # Email/OTP service
+│       ├── actions.ts         # Server actions
+│       └── validations.ts     # Zod schemas
+├── docker-compose.yml         # Docker configuration
+├── Dockerfile                 # Production Docker image
+└── package.json               # Dependencies & scripts
+```
+
+---
+
+## 📋 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:push` | Push schema to database |
+| `npm run db:seed` | Seed database with sample data |
+| `npm run db:studio` | Open Prisma Studio (database GUI) |
+
+---
+
+## 🌐 Application Routes
+
+| Route | Description | Access |
+|-------|-------------|--------|
+| `/community` | Community landing page | Public |
+| `/community/[product]` | Product community page | Public |
+| `/community/[product]/new` | Create new topic | Authenticated |
+| `/community/[product]/topic/[slug]` | Topic detail page | Public |
+| `/community/search` | Search with filters | Public |
+| `/u/[username]` | User profile | Public |
+| `/auth/signin` | Sign in page | Public |
+| `/auth/signup` | Sign up page | Public |
+| `/mod` | Moderation dashboard | Moderator/Admin |
+| `/admin` | Admin panel | Admin only |
+
+---
+
+## ✨ Features
 
 ### Core Features
-- 🏢 **Multi-Product Architecture** - One community, multiple products with scoped navigation
-- ❓ **Questions & Answers** - Ask questions, get answers, mark accepted solutions
+- 🏢 **Multi-Product Architecture** - One community, multiple products
+- ❓ **Questions & Answers** - Ask questions, get answers, mark solutions
 - 💬 **Discussions** - Start conversations and share ideas
 - 📢 **Announcements** - Pin important updates
 - ✨ **Showcase** - Share what you've built
 
+### Authentication
+- 📧 **Email OTP Verification** - Secure sign-up and sign-in with 6-digit codes
+- 🔑 **Password Authentication** - Traditional email/password login
+- 🔐 **Google OAuth** - Sign in with Google (optional)
+
 ### User Features
-- 🔐 **Authentication** - Email/password and Google OAuth
 - 👤 **User Profiles** - Bio, reputation, badges, activity history
 - 🗳️ **Voting** - Upvote/downvote topics and replies
 - 🔖 **Bookmarks** - Save topics for later
-- 🔔 **Subscriptions** - Follow products, categories, topics, or tags
-- 🏆 **Reputation System** - Earn points for helpful contributions
+- 🏆 **Reputation System** - Earn points for contributions
 
 ### Moderation
 - 🚩 **Report System** - Flag inappropriate content
@@ -26,214 +217,122 @@ A production-ready, multi-product community forum application built with Next.js
 - 🔒 **Role-Based Access** - Guest, User, Trusted, Moderator, Admin
 
 ### Search & Discovery
-- 🔍 **Full-Text Search** - PostgreSQL-powered search with faceted filtering
+- 🔍 **Full-Text Search** - PostgreSQL-powered search
 - 🏷️ **Tags** - Categorize and discover content
 - 📂 **Categories** - Organize topics by product area
 
-## Tech Stack
+---
 
-- **Frontend**: Next.js 14 (App Router), React 18, TypeScript
-- **Styling**: TailwindCSS, Radix UI components
-- **Backend**: Next.js API Routes & Server Actions
-- **Database**: PostgreSQL with Prisma ORM
-- **Auth**: NextAuth.js with credentials & Google OAuth
-- **Search**: PostgreSQL full-text search (swappable to Meilisearch/Elastic)
-- **Markdown**: react-markdown with syntax highlighting
+## 🐳 Docker Setup
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ 
-- pnpm (recommended) or npm
-- PostgreSQL 14+
-- Docker (optional, for local database)
-
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-# Database
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/community_forum?schema=public"
-
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-super-secret-key-generate-with-openssl"
-
-# Google OAuth (optional)
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
-
-# Feature Flags
-ENABLE_REDIS_CACHE="false"
-ENABLE_AI_FEATURES="false"
-
-# Redis (optional)
-REDIS_URL="redis://localhost:6379"
-```
-
-### Installation
-
-1. **Clone and install dependencies**
+### Development with Docker
 
 ```bash
-git clone <repository>
-cd community-forum
-pnpm install
-```
-
-2. **Start the database**
-
-Using Docker (recommended):
-```bash
-docker-compose up -d postgres
-```
-
-Or use your own PostgreSQL instance.
-
-3. **Set up the database**
-
-```bash
-# Generate Prisma client
-pnpm db:generate
-
-# Run migrations
-pnpm db:push
-
-# Seed the database with sample data
-pnpm db:seed
-```
-
-4. **Start the development server**
-
-```bash
-pnpm dev
-```
-
-5. **Open the app**
-
-Visit [http://localhost:3000/community](http://localhost:3000/community)
-
-### Demo Accounts
-
-After seeding, you can log in with these accounts:
-
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@community.dev | Admin123! |
-| Moderator | mod@community.dev | Mod12345! |
-| User | alice@example.com | User1234! |
-| User | bob@example.com | User1234! |
-| User | charlie@example.com | User1234! |
-
-## Project Structure
-
-```
-├── prisma/
-│   ├── schema.prisma     # Database schema
-│   └── seed.ts           # Seed script
-├── src/
-│   ├── app/              # Next.js App Router
-│   │   ├── (community)/  # Community pages
-│   │   │   ├── community/
-│   │   │   │   ├── page.tsx                    # Landing page
-│   │   │   │   ├── [productSlug]/
-│   │   │   │   │   ├── page.tsx                # Product page
-│   │   │   │   │   ├── new/page.tsx            # Create topic
-│   │   │   │   │   └── topic/[topicSlug]/      # Topic detail
-│   │   │   │   └── search/page.tsx             # Search results
-│   │   │   ├── u/[username]/page.tsx           # User profile
-│   │   │   └── mod/page.tsx                    # Moderation dashboard
-│   │   ├── api/          # API routes
-│   │   └── auth/         # Auth pages
-│   ├── components/       # React components
-│   │   ├── ui/           # Base UI components
-│   │   ├── layout/       # Layout components
-│   │   ├── topic/        # Topic components
-│   │   └── mod/          # Moderation components
-│   └── lib/              # Utilities
-│       ├── actions.ts    # Server actions
-│       ├── auth.ts       # Auth configuration
-│       ├── db.ts         # Database client
-│       ├── search.ts     # Search provider
-│       ├── utils.ts      # Utility functions
-│       └── validations.ts # Zod schemas
-├── docker-compose.yml    # Docker configuration
-├── Dockerfile            # Production Dockerfile
-└── package.json
-```
-
-## Key Routes
-
-| Route | Description |
-|-------|-------------|
-| `/community` | Community landing page |
-| `/community/[productSlug]` | Product community page |
-| `/community/[productSlug]/new` | Create new topic |
-| `/community/[productSlug]/topic/[topicSlug]` | Topic detail page |
-| `/community/search` | Search with filters |
-| `/u/[username]` | User profile |
-| `/mod` | Moderation dashboard (mods/admins) |
-| `/admin` | Admin panel (admins only) |
-| `/auth/signin` | Sign in |
-| `/auth/signup` | Sign up |
-
-## Scripts
-
-```bash
-pnpm dev          # Start development server
-pnpm build        # Build for production
-pnpm start        # Start production server
-pnpm lint         # Run ESLint
-pnpm db:generate  # Generate Prisma client
-pnpm db:push      # Push schema to database
-pnpm db:migrate   # Run migrations
-pnpm db:seed      # Seed database
-pnpm db:studio    # Open Prisma Studio
-```
-
-## Docker
-
-### Development
-
-```bash
-# Start just the database
+# Start PostgreSQL only
 docker-compose up -d postgres
 
-# Or with Redis
+# Start PostgreSQL and Redis
 docker-compose up -d postgres redis
 ```
 
-### Production
+### Production Build
 
 ```bash
-# Build and run everything
-docker-compose --profile production up -d
+# Build the Docker image
+docker build -t ai-forum .
+
+# Run the container
+docker run -p 3000:3000 --env-file .env ai-forum
 ```
 
-## Phase 2 Roadmap
+---
 
-Features designed for but not fully implemented:
+## 🔧 Troubleshooting
 
-- [ ] **Email Digests** - Daily/weekly notification emails
-- [ ] **Notification Preferences** - Granular notification settings
-- [ ] **Badges Engine** - Automatic badge awards based on rules
-- [ ] **Rich Editor** - WYSIWYG with image uploads
-- [ ] **SSO/SAML** - Enterprise single sign-on
-- [ ] **Meilisearch/Elastic** - Pluggable search backend (interface ready)
-- [ ] **Docs Integration** - Link topics to documentation
-- [ ] **AI Helper** - Draft answers and suggest related topics
+### Database Connection Issues
 
-## Contributing
+```bash
+# Check if PostgreSQL is running
+brew services list | grep postgresql
+
+# Restart PostgreSQL
+brew services restart postgresql@16
+```
+
+### Port Already in Use
+
+```bash
+# Find and kill process on port 3000
+lsof -i :3000
+kill -9 <PID>
+```
+
+### Reset Database
+
+```bash
+# Drop and recreate database
+/opt/homebrew/opt/postgresql@16/bin/dropdb community_forum
+/opt/homebrew/opt/postgresql@16/bin/createdb community_forum
+npm run db:push
+npm run db:seed
+```
+
+---
+
+## 📧 Email Configuration
+
+### Development (Default)
+Emails are captured by [Ethereal](https://ethereal.email/) - check your terminal for preview links.
+
+### Production
+Add these to your `.env`:
+```env
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASSWORD="your-app-password"
+EMAIL_FROM="Community Forum <noreply@yourdomain.com>"
+```
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+1. Push code to GitHub
+2. Import project on [Vercel](https://vercel.com)
+3. Add environment variables
+4. Deploy
+
+### Self-Hosted
+
+1. Build the production image:
+```bash
+docker build -t ai-forum .
+```
+
+2. Run with your environment:
+```bash
+docker run -d -p 3000:3000 \
+  -e DATABASE_URL="your-database-url" \
+  -e NEXTAUTH_SECRET="your-secret" \
+  -e NEXTAUTH_URL="https://yourdomain.com" \
+  ai-forum
+```
+
+---
+
+## 📝 License
+
+MIT License - see LICENSE file for details.
+
+---
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## License
-
-MIT License - see LICENSE file for details
-
