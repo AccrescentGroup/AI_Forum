@@ -1,0 +1,523 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// AUTH & USER
+// ============================================================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum VerificationCodeType {
+  EMAIL_VERIFICATION
+  SIGN_IN
+  PASSWORD_RESET
+}
+
+model VerificationCode {
+  id        String               @id @default(cuid())
+  code      String
+  type      VerificationCodeType
+  email     String
+  userId    String?
+  expires   DateTime
+  used      Boolean              @default(false)
+  createdAt DateTime             @default(now())
+
+  @@index([email, type])
+  @@index([code, email])
+}
+
+enum UserRole {
+  GUEST
+  USER
+  TRUSTED
+  MODERATOR
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  username      String?   @unique
+  bio           String?   @db.Text
+  website       String?
+  github        String?
+  twitter       String?
+  role          UserRole  @default(USER)
+  reputation    Int       @default(0)
+  isBanned      Boolean   @default(false)
+  banReason     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  topics        Topic[]
+  replies       Reply[]
+  votes         Vote[]
+  bookmarks     Bookmark[]
+  subscriptions Subscription[]
+  badges        UserBadge[]
+  reports       Report[]       @relation("Reporter")
+  modActions    ModAction[]    @relation("Moderator")
+  notifications Notification[]
+
+  @@index([email])
+  @@index([username])
+  @@index([role])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  description String
+  icon        String
+  color       String
+  requirement String?
+  createdAt   DateTime    @default(now())
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@index([badgeId])
+}
+
+// ============================================================================
+// PRODUCT & CATEGORIES
+// ============================================================================
+
+enum ProductStatus {
+  ACTIVE
+  BETA
+  HIDDEN
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  description String?       @db.Text
+  icon        String?
+  color       String?
+  status      ProductStatus @default(ACTIVE)
+  ordering    Int           @default(0)
+  docsUrl     String?
+  releaseUrl  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  categories    Category[]
+  topics        Topic[]
+  subscriptions Subscription[]
+
+  @@index([slug])
+  @@index([status])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String
+  name        String
+  description String?  @db.Text
+  icon        String?
+  ordering    Int      @default(0)
+  productId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product       Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
+  topics        Topic[]
+  subscriptions Subscription[]
+
+  @@unique([productId, slug])
+  @@index([productId])
+  @@index([slug])
+}
+
+// ============================================================================
+// TOPICS & REPLIES
+// ============================================================================
+
+enum TopicStatus {
+  OPEN
+  ANSWERED
+  RESOLVED
+  LOCKED
+  ARCHIVED
+}
+
+enum TopicType {
+  QUESTION
+  DISCUSSION
+  ANNOUNCEMENT
+  SHOWCASE
+}
+
+model Topic {
+  id           String      @id @default(cuid())
+  slug         String
+  title        String
+  body         String      @db.Text
+  status       TopicStatus @default(OPEN)
+  type         TopicType   @default(QUESTION)
+  isPinned     Boolean     @default(false)
+  viewCount    Int         @default(0)
+  voteScore    Int         @default(0)
+  replyCount   Int         @default(0)
+  lastActivity DateTime    @default(now())
+  productId    String
+  categoryId   String?
+  authorId     String
+  acceptedReplyId String?  @unique
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category      Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  acceptedReply Reply?         @relation("AcceptedAnswer", fields: [acceptedReplyId], references: [id])
+  replies       Reply[]        @relation("TopicReplies")
+  votes         Vote[]
+  bookmarks     Bookmark[]
+  tags          TopicTag[]
+  subscriptions Subscription[]
+  reports       Report[]
+  editHistory   EditHistory[]
+
+  @@unique([productId, slug])
+  @@index([productId])
+  @@index([categoryId])
+  @@index([authorId])
+  @@index([status])
+  @@index([type])
+  @@index([isPinned])
+  @@index([createdAt])
+  @@index([lastActivity])
+  @@index([voteScore])
+}
+
+model Reply {
+  id         String   @id @default(cuid())
+  body       String   @db.Text
+  voteScore  Int      @default(0)
+  isDeleted  Boolean  @default(false)
+  topicId    String
+  authorId   String
+  parentId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  topic           Topic         @relation("TopicReplies", fields: [topicId], references: [id], onDelete: Cascade)
+  author          User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent          Reply?        @relation("ReplyThread", fields: [parentId], references: [id], onDelete: SetNull)
+  children        Reply[]       @relation("ReplyThread")
+  acceptedForTopic Topic?       @relation("AcceptedAnswer")
+  votes           Vote[]
+  reports         Report[]
+  editHistory     EditHistory[]
+
+  @@index([topicId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([createdAt])
+}
+
+model EditHistory {
+  id        String   @id @default(cuid())
+  body      String   @db.Text
+  editedBy  String
+  topicId   String?
+  replyId   String?
+  createdAt DateTime @default(now())
+
+  topic Topic? @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  reply Reply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@index([topicId])
+  @@index([replyId])
+}
+
+// ============================================================================
+// TAGS
+// ============================================================================
+
+model Tag {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  color       String?
+  usageCount  Int        @default(0)
+  createdAt   DateTime   @default(now())
+  topics      TopicTag[]
+  subscriptions Subscription[]
+
+  @@index([slug])
+  @@index([usageCount])
+}
+
+model TopicTag {
+  topicId String
+  tagId   String
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([topicId, tagId])
+  @@index([topicId])
+  @@index([tagId])
+}
+
+// ============================================================================
+// VOTES & BOOKMARKS
+// ============================================================================
+
+enum VoteType {
+  UP
+  DOWN
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  type      VoteType
+  userId    String
+  topicId   String?
+  replyId   String?
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic? @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  reply Reply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@unique([userId, replyId])
+  @@index([userId])
+  @@index([topicId])
+  @@index([replyId])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  topicId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId])
+  @@index([topicId])
+}
+
+// ============================================================================
+// SUBSCRIPTIONS & NOTIFICATIONS
+// ============================================================================
+
+enum SubscriptionType {
+  PRODUCT
+  CATEGORY
+  TOPIC
+  TAG
+}
+
+enum NotificationFrequency {
+  INSTANT
+  DAILY
+  WEEKLY
+  NONE
+}
+
+model Subscription {
+  id         String                @id @default(cuid())
+  type       SubscriptionType
+  frequency  NotificationFrequency @default(INSTANT)
+  userId     String
+  productId  String?
+  categoryId String?
+  topicId    String?
+  tagId      String?
+  createdAt  DateTime              @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product  Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  topic    Topic?    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  tag      Tag?      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, productId, categoryId, topicId, tagId])
+  @@index([userId])
+}
+
+enum NotificationType {
+  NEW_REPLY
+  REPLY_ACCEPTED
+  MENTION
+  VOTE
+  BADGE_EARNED
+  TOPIC_STATUS
+  MOD_ACTION
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean          @default(false)
+  userId    String
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// MODERATION
+// ============================================================================
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  INAPPROPRIATE
+  OFF_TOPIC
+  DUPLICATE
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reason     ReportReason
+  details    String?      @db.Text
+  status     ReportStatus @default(PENDING)
+  reporterId String
+  topicId    String?
+  replyId    String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  reporter User   @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  topic    Topic? @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  reply    Reply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([topicId])
+  @@index([replyId])
+  @@index([status])
+}
+
+enum ModActionType {
+  LOCK_TOPIC
+  UNLOCK_TOPIC
+  PIN_TOPIC
+  UNPIN_TOPIC
+  MOVE_TOPIC
+  MERGE_TOPIC
+  DELETE_TOPIC
+  RESTORE_TOPIC
+  DELETE_REPLY
+  RESTORE_REPLY
+  BAN_USER
+  UNBAN_USER
+  WARN_USER
+  CHANGE_STATUS
+  RESOLVE_REPORT
+  DISMISS_REPORT
+}
+
+model ModAction {
+  id          String        @id @default(cuid())
+  type        ModActionType
+  reason      String?
+  details     Json?
+  moderatorId String
+  targetUserId String?
+  topicId     String?
+  replyId     String?
+  reportId    String?
+  createdAt   DateTime      @default(now())
+
+  moderator User @relation("Moderator", fields: [moderatorId], references: [id], onDelete: Cascade)
+
+  @@index([moderatorId])
+  @@index([topicId])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// SITE SETTINGS
+// ============================================================================
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+

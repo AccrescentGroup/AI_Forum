@@ -1,0 +1,232 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 71% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71% 4%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 46%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 262 83% 95%;
+    --accent-foreground: 262 83% 58%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 20% 98%;
+    --success: 142 76% 36%;
+    --success-foreground: 210 20% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 224 71% 4%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 262 83% 58%;
+    --radius: 0.625rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 20% 98%;
+    --card: 224 71% 6%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71% 6%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 217 11% 65%;
+    --accent: 263 70% 25%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 20% 98%;
+    --success: 142 70% 45%;
+    --success-foreground: 210 20% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 224 71% 4%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 263 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+/* Custom animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted-foreground) / 0.1) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* Markdown content styles */
+.prose-community {
+  @apply text-foreground;
+}
+
+.prose-community h1,
+.prose-community h2,
+.prose-community h3,
+.prose-community h4,
+.prose-community h5,
+.prose-community h6 {
+  @apply font-semibold text-foreground mt-6 mb-3;
+}
+
+.prose-community h1 { @apply text-2xl; }
+.prose-community h2 { @apply text-xl; }
+.prose-community h3 { @apply text-lg; }
+
+.prose-community p {
+  @apply my-3 leading-relaxed;
+}
+
+.prose-community a {
+  @apply text-primary underline underline-offset-2 hover:text-primary/80 transition-colors;
+}
+
+.prose-community ul,
+.prose-community ol {
+  @apply my-3 pl-6;
+}
+
+.prose-community ul { @apply list-disc; }
+.prose-community ol { @apply list-decimal; }
+
+.prose-community li {
+  @apply my-1;
+}
+
+.prose-community blockquote {
+  @apply border-l-4 border-primary/30 pl-4 my-4 italic text-muted-foreground;
+}
+
+.prose-community pre {
+  @apply bg-muted rounded-lg p-4 my-4 overflow-x-auto text-sm;
+}
+
+.prose-community code {
+  @apply font-mono text-sm;
+}
+
+.prose-community :not(pre) > code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-primary;
+}
+
+.prose-community hr {
+  @apply my-6 border-border;
+}
+
+.prose-community table {
+  @apply w-full my-4 border-collapse;
+}
+
+.prose-community th,
+.prose-community td {
+  @apply border border-border px-3 py-2 text-left;
+}
+
+.prose-community th {
+  @apply bg-muted font-semibold;
+}
+
+.prose-community img {
+  @apply rounded-lg max-w-full h-auto my-4;
+}
+
+/* Focus visible styles */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Pattern backgrounds */
+.pattern-dots {
+  background-image: radial-gradient(circle, hsl(var(--muted-foreground) / 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.pattern-grid {
+  background-image: 
+    linear-gradient(to right, hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Gradient backgrounds */
+.gradient-radial {
+  background: radial-gradient(
+    ellipse at top,
+    hsl(var(--primary) / 0.15) 0%,
+    transparent 50%
+  );
+}
+
+.gradient-mesh {
+  background: 
+    radial-gradient(at 40% 20%, hsl(var(--primary) / 0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, hsl(263 70% 60% / 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsl(var(--primary) / 0.05) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsl(217 91% 60% / 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsl(var(--primary) / 0.1) 0px, transparent 50%);
+}
+
